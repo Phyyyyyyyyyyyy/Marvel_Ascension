@@ -7,6 +7,6 @@ import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 
 
-public class Start {
-    
+public class Start extends JFrame implements ActionListener, ItemListener {
+    /* Game Mechanics type code here. */
 }
