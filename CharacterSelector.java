@@ -21,7 +21,7 @@ public class CharacterSelector extends JPanel {
 
         // Title
         JLabel header = new JLabel("SELECT YOUR AVENGER", SwingConstants.CENTER);
-        header.setFont(new Font("Comic Sans MS", Font.BOLD, 36));
+        header.setFont(new Font("Arial", Font.BOLD, 36));
         header.setForeground(new Color(255, 215, 0));
         add(header, BorderLayout.NORTH);
 
