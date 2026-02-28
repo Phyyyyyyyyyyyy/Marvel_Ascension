@@ -409,7 +409,7 @@ public class GameGUI extends JFrame implements ActionListener {
         if (e.getSource() == startButton) {
             JOptionPane.showMessageDialog(this, 
                 "START GAME - Add your game here!\n\nThis is where the main game will launch.", 
-                "Start Game", 
+                "Start Game",  /* Insert object method of in game here */
                 JOptionPane.INFORMATION_MESSAGE);
                 
         } else if (e.getSource() == settingsButton) {
