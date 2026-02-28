@@ -34,7 +34,7 @@ public class GameGUI extends JFrame implements ActionListener {
 
         // Icon for game GUI
         try {
-            ImageIcon logo = new ImageIcon("src/main/resources/logo.png");
+            ImageIcon logo = new ImageIcon("Resources/icon.jpg");
             setIconImage(logo.getImage());
         } catch (Exception ex) {
             System.out.println("Logo not found - continuing without icon");
@@ -55,7 +55,7 @@ public class GameGUI extends JFrame implements ActionListener {
         showPanel("main");
     }
     
-    // === NEW PUBLIC METHODS FOR MAIN TO CONTROL ===
+    // === SET GET PARA SA MAIN NI SILA ===
     
     /**
      * Public method to set a custom title
@@ -99,8 +99,6 @@ public class GameGUI extends JFrame implements ActionListener {
         }
     }
     
-    // === YOUR EXISTING METHODS (with fixes) ===
-    
     private void createMainMenuPanel() {
         mainMenuPanel = new JPanel();
         mainMenuPanel.setLayout(new GridBagLayout());
@@ -110,8 +108,14 @@ public class GameGUI extends JFrame implements ActionListener {
         gbc.insets = new Insets(10, 10, 10, 10);
         gbc.fill = GridBagConstraints.HORIZONTAL;
         
-        titleLabel = new JLabel("MARVEL ASCENSION", SwingConstants.CENTER);
-        titleLabel.setFont(new Font("Arial", Font.BOLD, 48));
+
+        /* This is for the pixelated-header on the main menu */
+        ImageIcon titleImage = new ImageIcon("Resources/");
+        Image scaledImage = titleImage.getImage().getScaledInstance(300, 300, Image.SCALE_SMOOTH);
+        ImageIcon scaledIcon = new ImageIcon(scaledImage);
+
+        titleLabel = new JLabel("Marvel Ascension", SwingConstants.CENTER);
+        titleLabel.setFont(new Font("Comic Sans MS", Font.BOLD, 48));
         titleLabel.setForeground(new Color(255, 215, 0));
         titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
         
@@ -149,7 +153,7 @@ public class GameGUI extends JFrame implements ActionListener {
         gbc.gridy = 5;
         mainMenuPanel.add(exitButton, gbc);
         
-        versionLabel = new JLabel("Version 0.1 - Prototype");
+        versionLabel = new JLabel("Version 0.2- Prototype");
         versionLabel.setFont(new Font("Arial", Font.PLAIN, 12));
         versionLabel.setForeground(Color.GRAY);
         
@@ -174,7 +178,7 @@ public class GameGUI extends JFrame implements ActionListener {
         button.setContentAreaFilled(true);
         button.setBorderPainted(true);
         
-        // Add a nice border for better visibility
+        // Add a border for better visibility
         button.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createBevelBorder(BevelBorder.RAISED, Color.WHITE, bgColor.darker()),
             BorderFactory.createEmptyBorder(10, 20, 10, 20)
@@ -247,9 +251,9 @@ public class GameGUI extends JFrame implements ActionListener {
 
         JCheckBox fsCheck = new JCheckBox("Fullscreen Mode");
 
-        
+
         /* condition of selected checkbox to work fullscreen */
-        /* di man mo gana yaaaaaaaaaaaaaaaaaaaaaaaaaaa  */
+        /*  */
         JFrame frame = new JFrame("Display Settings");
 
         fsCheck.addItemListener(new ItemListener() {
