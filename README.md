@@ -1,2 +1,2 @@
 # Marvel_Ascension
-Marvel Ascension progress OOP2 from prototype to final build, will be built using this repository.
+Mag butang tag comments please kada linya unta kung mahimo para ma g unsa ni, unsa na.
