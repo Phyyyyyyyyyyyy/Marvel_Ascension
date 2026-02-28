@@ -1,53 +1,47 @@
 import javax.swing.*;
 import javax.swing.border.BevelBorder;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.event.*;
 
 public class GameGUI extends JFrame implements ActionListener {
     
-    private JButton startButton, settingsButton, helpButton, aboutButton, exitButton;
-    private JLabel titleLabel, versionLabel;
+    private JButton startButton, settingsButton, helpButton, exitButton, aboutButton;
+    private JLabel titleLabel;
     private JPanel mainMenuPanel, settingsPanel, helpPanel, aboutPanel;
-    private CharacterSelector selectorPanel; 
-    private String currentPanel = "main";
     
+    private GameModes modesPanel; 
+    private CharacterSelector selectorPanel; 
+    
+    private boolean isFullscreen = false;
+
     public GameGUI() {
-        setTitle("MARVEL ASCENSION - GAME PROTOTYPE");
+        setTitle("MARVEL ASCENSION");
         setSize(1024, 800);
-        setMinimumSize(new Dimension(800, 600));
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
-        // Icon Handling
-        try {
-            ImageIcon logo = new ImageIcon("Resources/icon.jpg");
-            setIconImage(logo.getImage());
-        } catch (Exception ex) {
-            System.out.println("Logo not found - continuing without icon");
-        }
-        
-        // Using CardLayout to swap between different game screens
         setLayout(new CardLayout());
         
         // Initialize Panels
         createMainMenuPanel();
         createSettingsPanel();
-        createHelpPanel();
         createAboutPanel();
-        selectorPanel = new CharacterSelector(this); // Pass 'this' so it can call navigateTo
+        createHelpPanel();
+        modesPanel = new GameModes(this);
+        selectorPanel = new CharacterSelector(this);
         
-        // Add to CardLayout
+        // Register in CardLayout
         add(mainMenuPanel, "main");
         add(settingsPanel, "settings");
-        add(helpPanel, "help");
         add(aboutPanel, "about");
-        add(selectorPanel, "selector"); // The hero selection screen
+        add(helpPanel, "help");
+        add(modesPanel, "modes");       
+        add(selectorPanel, "selector"); 
         
         showPanel("main");
     }
-    
-    // Global navigation method
+
     public void navigateTo(String panelName) {
         showPanel(panelName);
     }
@@ -55,128 +49,143 @@ public class GameGUI extends JFrame implements ActionListener {
     private void showPanel(String panelName) {
         CardLayout cl = (CardLayout) getContentPane().getLayout();
         cl.show(getContentPane(), panelName);
-        currentPanel = panelName;
     }
-    
+
     private void createMainMenuPanel() {
         mainMenuPanel = new JPanel(new GridBagLayout());
-        mainMenuPanel.setBackground(new Color(30, 30, 30));
+        mainMenuPanel.setBackground(new Color(15, 15, 20));
         
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(10, 10, 10, 10);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        titleLabel = new JLabel("Marvel Ascension", SwingConstants.CENTER);
-        titleLabel.setFont(new Font("Comic Sans MS", Font.BOLD, 48));
-        titleLabel.setForeground(new Color(255, 215, 0));
+        // FIXED EPIC TITLE: Using HTML for a "Glow" effect since setShadow is undefined
+        titleLabel = new JLabel("<html><div style='text-align: center; color: #FFD700; font-family: serif; font-size: 50pt;'>MARVEL<br>ASCENSION</div></html>", SwingConstants.CENTER);
         
-        gbc.gridx = 0; gbc.gridy = 0; gbc.gridwidth = 2;
+        gbc.gridy = 0; gbc.gridwidth = 2;
         mainMenuPanel.add(titleLabel, gbc);
         
-        startButton = createEnhancedButton("START GAME", new Color(0, 150, 0));
-        settingsButton = createEnhancedButton("SETTINGS", new Color(150, 150, 0));
-        helpButton = createEnhancedButton("HELP", new Color(0, 100, 200));
-        aboutButton = createEnhancedButton("ABOUT", new Color(150, 0, 150));
-        exitButton = createEnhancedButton("EXIT", new Color(150, 0, 0));
+
+     /* The buttons are here */
+
+        startButton = createEpicButton("INITIATE MISSION", new Color(180, 0, 0));
+        settingsButton = createEpicButton("SYSTEM CONFIG", new Color(50, 50, 70));
+        helpButton = createEpicButton("DATABASE", new Color(50, 50, 70));
+        aboutButton = createEpicButton("ABOUT", new Color(50, 50, 70));
+        exitButton = createEpicButton("ABORT", new Color(30, 30, 30));
+
         
-        JButton[] buttons = {startButton, settingsButton, helpButton, aboutButton, exitButton};
-        for(int i = 0; i < buttons.length; i++) {
-            buttons[i].addActionListener(this);
+        JButton[] btns = {startButton, settingsButton, helpButton, aboutButton, exitButton};
+        for(int i=0; i<btns.length; i++) {
+            btns[i].addActionListener(this);
             gbc.gridy = i + 1;
-            mainMenuPanel.add(buttons[i], gbc);
+            mainMenuPanel.add(btns[i], gbc);
         }
+    }
+
+    private void createAboutPanel() {
+        // Placeholder for future "About" section, currently unused
+        aboutPanel = new JPanel(new BorderLayout());
+        aboutPanel.setBackground(new Color(20, 20, 25));
+
+        JLabel title = new JLabel("ABOUT MARVEL ASCENSION", SwingConstants.CENTER);
+        title.setFont(new Font("SansSerif", Font.BOLD, 40));
+        title.setForeground(Color.CYAN);
+        title.setBorder(new EmptyBorder(30,0,30,0));    
+        JTextArea info = new JTextArea("MARVEL ASCENSION is a fan-made project by Group Unturned,inspired by the Marvel Universe.\nThis game is a passion project and is not affiliated with Marvel or Disney.\nAll characters and lore are used under fair use for educational and entertainment purposes.\n\n\n\nDevs:\nReuben\nJan Clark\nMicoh\nJaffe\nJustine.");
+        info.setFont(new Font("Monospaced", Font.PLAIN, 16));
+        info.setForeground(Color.GREEN);
+        info.setBackground(Color.BLACK);
+        info.setEditable(false);
+       
+        JButton back = createEpicButton("BACK TO HUB", Color.GRAY);
+        back.addActionListener(e -> showPanel("main"));
+        aboutPanel.add(title, BorderLayout.NORTH);
+        aboutPanel.add(new JScrollPane(info), BorderLayout.CENTER);
         
-        versionLabel = new JLabel("Version 0.2 - Prototype");
-        versionLabel.setForeground(Color.GRAY);
-        gbc.gridy = 6;
-        mainMenuPanel.add(versionLabel, gbc);
+        
+        
     }
 
-    private JButton createEnhancedButton(String text, Color bgColor) {
-        JButton button = new JButton(text);
-        button.setFont(new Font("Arial", Font.BOLD, 24));
-        button.setForeground(Color.WHITE);
-        button.setBackground(bgColor);
-        button.setOpaque(true);
-        button.setContentAreaFilled(true);
-        button.setUI(new javax.swing.plaf.basic.BasicButtonUI());
-        button.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createBevelBorder(BevelBorder.RAISED, Color.WHITE, bgColor.darker()),
-            BorderFactory.createEmptyBorder(10, 20, 10, 20)
-        ));
-        button.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseEntered(java.awt.event.MouseEvent e) { button.setBackground(bgColor.brighter()); }
-            public void mouseExited(java.awt.event.MouseEvent e) { button.setBackground(bgColor); }
-        });
-        return button;
-    }
-
-    private void createSettingsPanel() {
+    private void createSettingsPanel() {   
         settingsPanel = new JPanel(new BorderLayout());
-        settingsPanel.setBackground(new Color(40, 40, 40));
-        JLabel title = new JLabel("SETTINGS", SwingConstants.CENTER);
-        title.setFont(new Font("Arial", Font.BOLD, 36));
-        title.setForeground(Color.YELLOW);
+        settingsPanel.setBackground(new Color(20, 20, 25));
         
-        JCheckBox fsCheck = new JCheckBox("Fullscreen Mode");
-        fsCheck.setFont(new Font("Arial", Font.PLAIN, 18));
+        JLabel title = new JLabel("SYSTEM CONFIGURATION", SwingConstants.CENTER);
+        title.setFont(new Font("SansSerif", Font.BOLD, 40));
+        title.setForeground(Color.CYAN);
+        title.setBorder(new EmptyBorder(30,0,30,0));
+
+        JPanel optionsGrid = new JPanel(new GridLayout(3, 1, 20, 20));
+        optionsGrid.setOpaque(false);
+        optionsGrid.setBorder(new EmptyBorder(0, 100, 0, 100));
+
+        // RESTORED FULLSCREEN
+        JCheckBox fsCheck = new JCheckBox("ACTIVATE FULLSCREEN MODE");
+        fsCheck.setFont(new Font("Monospaced", Font.BOLD, 22));
         fsCheck.setForeground(Color.WHITE);
         fsCheck.setOpaque(false);
+        fsCheck.setSelected(isFullscreen);
+
         fsCheck.addItemListener(e -> {
-            dispose();
+            dispose(); // Must dispose to change decoration
             if (fsCheck.isSelected()) {
-                setUndecorated(true); setExtendedState(MAXIMIZED_BOTH);
+                setUndecorated(true);
+                setExtendedState(JFrame.MAXIMIZED_BOTH);
+                isFullscreen = true;
             } else {
-                setUndecorated(false); setSize(1024, 800); setLocationRelativeTo(null);
+                setUndecorated(false);
+                setExtendedState(JFrame.NORMAL);
+                setSize(1024, 800);
+                setLocationRelativeTo(null);
+                isFullscreen = false;
             }
             setVisible(true);
         });
 
-        JButton back = createEnhancedButton("BACK TO MENU", Color.GRAY);
+        JButton back = createEpicButton("RETURN TO HUB", Color.GRAY);
         back.addActionListener(e -> showPanel("main"));
 
+        optionsGrid.add(fsCheck);
         settingsPanel.add(title, BorderLayout.NORTH);
-        settingsPanel.add(fsCheck, BorderLayout.CENTER);
+        settingsPanel.add(optionsGrid, BorderLayout.CENTER);
         settingsPanel.add(back, BorderLayout.SOUTH);
+    }
+
+    private JButton createEpicButton(String text, Color bg) {
+        JButton b = new JButton(text);
+        b.setFont(new Font("Impact", Font.PLAIN, 24));
+        b.setForeground(Color.WHITE);
+        b.setBackground(bg);
+        b.setFocusPainted(false);
+        b.setBorder(BorderFactory.createBevelBorder(BevelBorder.RAISED, bg.brighter(), bg.darker()));
+        b.setPreferredSize(new Dimension(350, 60));
+        return b;
     }
 
     private void createHelpPanel() {
         helpPanel = new JPanel(new BorderLayout());
-        JTextArea txt = new JTextArea("HOW TO PLAY:\n1. Click Start Game\n2. Hover over heroes to see stats\n3. Click a hero to deploy!");
-        txt.setEditable(false);
-        txt.setBackground(new Color(50, 50, 50));
-        txt.setForeground(Color.WHITE);
-        JButton back = createEnhancedButton("BACK", Color.GRAY);
+        helpPanel.setBackground(new Color(15, 15, 20));
+        JTextArea info = new JTextArea("S.H.I.E.L.D. DATABASE\n\n- Use Mouse to navigate.\n- Select mode.\n- Choose your Hero.");
+        info.setFont(new Font("Monospaced", Font.PLAIN, 18));
+        info.setForeground(Color.GREEN);
+        info.setBackground(Color.BLACK);
+        info.setEditable(false);
+        
+        JButton back = createEpicButton("BACK", Color.GRAY);
         back.addActionListener(e -> showPanel("main"));
-        helpPanel.add(new JScrollPane(txt), BorderLayout.CENTER);
+        
+        helpPanel.add(new JScrollPane(info), BorderLayout.CENTER);
         helpPanel.add(back, BorderLayout.SOUTH);
-    }
-
-    private void createAboutPanel() {
-        aboutPanel = new JPanel(new BorderLayout());
-        JTextArea txt = new JTextArea("MARVEL ASCENSION\nCreated by: Group Unturned\nOOP2 Project Prototype");
-        txt.setEditable(false);
-        txt.setBackground(new Color(50, 50, 50));
-        txt.setForeground(Color.WHITE);
-        JButton back = createEnhancedButton("BACK", Color.GRAY);
-        back.addActionListener(e -> showPanel("main"));
-        aboutPanel.add(new JScrollPane(txt), BorderLayout.CENTER);
-        aboutPanel.add(back, BorderLayout.SOUTH);
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        if (e.getSource() == startButton) {
-            showPanel("selector"); // Goes to the CharacterSelector screen
-        } else if (e.getSource() == settingsButton) {
-            showPanel("settings");
-        } else if (e.getSource() == helpButton) {
-            showPanel("help");
-        } else if (e.getSource() == aboutButton) {
-            showPanel("about");
-        } else if (e.getSource() == exitButton) {
-            System.exit(0);
-        }
+        if (e.getSource() == startButton) showPanel("modes");
+        else if (e.getSource() == settingsButton) showPanel("settings");
+        else if (e.getSource() == helpButton) showPanel("help");
+        else if (e.getSource() == aboutButton) showPanel("about");
+        else if (e.getSource() == exitButton) System.exit(0);
     }
 
     public static void main(String[] args) {
