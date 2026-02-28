@@ -3,6 +3,8 @@ import javax.swing.border.BevelBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 
 public class GameGUI extends JFrame implements ActionListener {
     
@@ -239,7 +241,43 @@ public class GameGUI extends JFrame implements ActionListener {
         
         JPanel fsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         fsPanel.setBackground(new Color(40, 40, 40));
+
+       
+
+
         JCheckBox fsCheck = new JCheckBox("Fullscreen Mode");
+
+        
+        /* condition of selected checkbox to work fullscreen */
+        /* di man mo gana yaaaaaaaaaaaaaaaaaaaaaaaaaaa  */
+        JFrame frame = new JFrame("Display Settings");
+
+        fsCheck.addItemListener(new ItemListener() {
+       @Override
+       public void itemStateChanged(ItemEvent e) {
+       
+        dispose(); 
+
+        if (fsCheck.isSelected()) {
+            setUndecorated(true); 
+            setExtendedState(JFrame.MAXIMIZED_BOTH);
+        } else {
+            setUndecorated(false); 
+            setExtendedState(JFrame.NORMAL);
+            setSize(1024, 800); 
+            setLocationRelativeTo(null); 
+        }
+
+       
+        setVisible(true);
+        revalidate();
+        repaint();
+        }
+     });
+
+
+
+
         fsCheck.setBackground(new Color(40, 40, 40));
         fsCheck.setForeground(Color.WHITE);
         fsCheck.setFont(new Font("Arial", Font.PLAIN, 16));

@@ -50,7 +50,7 @@ public class Main {
                 
                 // Create the GUI instance
                 gameGUI = new GameGUI();
-                System.out.println("✓ GUI created successfully");
+                System.out.println("GUI created successfully");
             }
         });
         
@@ -69,11 +69,11 @@ public class Main {
                 @Override
                 public void run() {
                     // You can call public methods from GameGUI here
-                    System.out.println("✓ Custom settings applied");
+                    System.out.println("Custom settings applied");
                 }
             });
         } else {
-            System.out.println("✗ GUI not initialized yet");
+            System.out.println("GUI not initialized yet");
         }
     }
     
@@ -88,11 +88,11 @@ public class Main {
                 @Override
                 public void run() {
                     gameGUI.setVisible(true);
-                    System.out.println("✓ GUI is now visible");
+                    System.out.println("GUI is now visible");
                 }
             });
         } else {
-            System.out.println("✗ Cannot show GUI - not initialized");
+            System.out.println("Cannot show GUI - not initialized");
         }
     }
     
