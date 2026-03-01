@@ -9,6 +9,7 @@ public class GameGUI extends JFrame implements ActionListener {
     private JButton startButton, settingsButton, helpButton, exitButton, aboutButton;
     private JLabel titleLabel;
     private JPanel mainMenuPanel, settingsPanel, helpPanel, aboutPanel;
+    private JDialog exitDialog;
     
     private GameModes modesPanel; 
     private CharacterSelector selectorPanel; 
@@ -44,6 +45,16 @@ public class GameGUI extends JFrame implements ActionListener {
 
     public void navigateTo(String panelName) {
         showPanel(panelName);
+    }
+
+    public void exitNavigation(String panelName) {
+        int result = JOptionPane.showConfirmDialog(this, "Are you sure you want to exit?", "Confirm Exit", JOptionPane.YES_NO_OPTION);
+
+        if (result == JOptionPane.YES_OPTION) {
+            System.exit(0);
+        } else if (result == JOptionPane.NO_OPTION) {
+            showPanel(panelName);
+        }
     }
 
     private void showPanel(String panelName) {
@@ -102,7 +113,7 @@ public class GameGUI extends JFrame implements ActionListener {
         back.addActionListener(e -> showPanel("main"));
         aboutPanel.add(title, BorderLayout.NORTH);
         aboutPanel.add(new JScrollPane(info), BorderLayout.CENTER);
-        
+        aboutPanel.add(back, BorderLayout.SOUTH);
         
         
     }
@@ -185,7 +196,7 @@ public class GameGUI extends JFrame implements ActionListener {
         else if (e.getSource() == settingsButton) showPanel("settings");
         else if (e.getSource() == helpButton) showPanel("help");
         else if (e.getSource() == aboutButton) showPanel("about");
-        else if (e.getSource() == exitButton) System.exit(0);
+        else if (e.getSource() == exitButton) exitNavigation("main"); 
     }
 
     public static void main(String[] args) {
