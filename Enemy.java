@@ -2,7 +2,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-public class Enemy {
+public class Enemy implements Interfaces.Combatant {
     // Properties
     private String name;
     private int hp;
