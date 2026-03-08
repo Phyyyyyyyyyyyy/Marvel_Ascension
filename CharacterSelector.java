@@ -3,7 +3,7 @@ import java.awt.*;
 import java.util.HashMap;
 import java.util.Map;
 
-public class CharacterSelector extends JPanel {
+public class CharacterSelector extends JPanel implements Interfaces.GameScreen {
     private final GameGUI mainFrame;
     private final Map<Integer, CharacterData> heroDataMap = new HashMap<>();
     private JTextArea storyDisplay;
@@ -16,7 +16,8 @@ public class CharacterSelector extends JPanel {
         setupLayout();
     }
 
-    private void setupLayout() {
+    @Override
+    public void setupLayout() {
         setLayout(new BorderLayout(10, 10));
         setBackground(new Color(20, 20, 20));
 
@@ -151,8 +152,9 @@ public class CharacterSelector extends JPanel {
 
     private void startGame(CharacterData hero) {
         int choice = JOptionPane.showConfirmDialog(this, "Initiate mission with " + hero.name + "?", "Mission Briefing", JOptionPane.YES_NO_OPTION);
-        if(choice == JOptionPane.YES_OPTION) {
-            JOptionPane.showMessageDialog(this, "Objective Loaded. Good luck, " + hero.name + ".");
+        if (choice == JOptionPane.YES_OPTION) {
+            mainFrame.setSelectedHero(hero.name);
+            mainFrame.navigateTo("maps");
         }
     }
 
