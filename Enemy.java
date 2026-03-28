@@ -1,123 +1,306 @@
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+import javax.swing.*;
+import javax.swing.border.BevelBorder;
+import java.awt.*;
+import java.awt.event.*;
+import java.io.File;
 
-/**
- * Enemy — Mirror Mode Version
- * Uses existing Hero data to create AI opponents quickly.
- */
-public class Enemy extends Combatant {
+public class GameGUI extends JFrame implements ActionListener, Interfaces.GameNavigator {
+    
+    private JButton startButton, settingsButton, helpButton, leaderboardButton, exitButton, aboutButton;
+    private JLabel titleLabel;
+    private JPanel mainMenuPanel, settingsPanel, helpPanel, aboutPanel, leaderboardPanel;
+    
+    private GameModes modesPanel; 
+    private CharacterSelector selectorPanel; 
+    private Maps mapsPanel;
+    
+    private String selectedHeroName;
+    private String selectedHero2Name;
+    private String currentMode = "AI";
+    private String customFontName = "Serif";
 
-    public enum EnemyTier { EASY, MEDIUM, HARD, BOSS }
+    private PvpBattleArena pvpArena;
+    private JPanel gauntletContainer;
 
-    private static final Random rand = new Random();
-    private final EnemyTier tier;
+    public class ScaledBackgroundPanel extends JPanel {
+        private Image background;
+        public ScaledBackgroundPanel(String path) {
+            background = new ImageIcon(path).getImage();
+            setLayout(new GridBagLayout());
+        }
+        @Override
+        protected void paintComponent(Graphics g) {
+            super.paintComponent(g);
+            g.drawImage(background, 0, 0, getWidth(), getHeight(), this);
+        }
+    }
 
-    public Enemy(String name, int hp, int attack,
-                 String skill1, String skill2, String skill3, String ultimate,
-                 int sk1Cost, int sk2Cost, int sk3Cost, int ultCost,
-                 int sk1Dmg, int sk2Dmg, int sk3Dmg, int ultDmg,
-                 EnemyTier tier) {
-        super(name, hp, attack, skill1, skill2, skill3, ultimate,
-              sk1Cost, sk2Cost, sk3Cost, ultCost, sk1Dmg, sk2Dmg, sk3Dmg, ultDmg);
-        this.tier = tier;
-        setCooldownManager(new CooldownManager());
+    public GameGUI() {
+        registerCustomFont("BitcountGridSingle_Cursive-SemiBold.ttf");
+
+        setTitle("MARVEL ASCENSION");
+        setSize(1024, 800);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null);
+        setLayout(new CardLayout());
+        
+        createMainMenuPanel();
+        createSettingsPanel();
+        createAboutPanel();
+        createHelpPanel();
+        modesPanel = new GameModes(this);
+        selectorPanel = new CharacterSelector(this);
+        mapsPanel = new Maps(this);
+        createLeaderboardPanel();
+        
+        add(mainMenuPanel, "main");
+        add(settingsPanel, "settings");
+        add(aboutPanel, "about");
+        add(helpPanel, "help");
+        add(leaderboardPanel, "leaderboard");
+        add(modesPanel, "modes");       
+        add(selectorPanel, "selector");
+        add(mapsPanel, "maps");
+        pvpArena = new PvpBattleArena(this);
+        add(pvpArena, "pvp");
+        gauntletContainer = new JPanel(new CardLayout());
+        add(gauntletContainer, "gauntlet");
+
+        showPanel("main");
+    }
+
+    private void registerCustomFont(String fileName) {
+        try {
+            File fontFile = new File("fonts/" + fileName);
+            Font customFont = Font.createFont(Font.TRUETYPE_FONT, fontFile);
+            GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+            ge.registerFont(customFont);
+            this.customFontName = customFont.getFontName(); 
+        } catch (Exception e) {
+            System.err.println("Font loading failed: " + e.getMessage());
+        }
+    }
+
+    private void createMainMenuPanel() {
+        mainMenuPanel = new ScaledBackgroundPanel("images/main_menu.png");
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        titleLabel = new JLabel(
+            "<html><div style='text-align: center; color: #FFD700; " +
+            "font-family: \"" + customFontName + "\", serif; " +
+            "font-size: 55pt; letter-spacing: 8px; " +
+            "text-shadow: 2px 2px 5px #000000;'>" +
+            "MARVEL<br>ASCENSION</div></html>",
+            SwingConstants.CENTER
+        );
+        titleLabel.setOpaque(false);
+        
+        gbc.gridy = 0;
+        mainMenuPanel.add(titleLabel, gbc);
+
+        startButton       = createEpicButton("INITIATE MISSION", new Color(180, 0, 0));
+        settingsButton    = createEpicButton("SYSTEM CONFIG",   new Color(50, 50, 70));
+        helpButton        = createEpicButton("DATABASE",        new Color(50, 50, 70));
+        leaderboardButton = createEpicButton("COMBAT RECORD",     new Color(50, 50, 70));
+        aboutButton       = createEpicButton("ABOUT",           new Color(50, 50, 70));
+        exitButton        = createEpicButton("ABORT",           new Color(30, 30, 30));
+
+        JButton[] btns = {startButton, settingsButton, helpButton, leaderboardButton, aboutButton, exitButton};
+        for (int i = 0; i < btns.length; i++) {
+            btns[i].addActionListener(this);
+            gbc.gridy = i + 1;
+            mainMenuPanel.add(btns[i], gbc);
+        }
+    }
+
+    private void createLeaderboardPanel() {
+        leaderboardPanel = new JPanel(new BorderLayout());
+        leaderboardPanel.setBackground(new Color(15, 15, 20));
+
+        JLabel title = new JLabel("S.H.I.E.L.D. COMBAT LEADERBOARD", SwingConstants.CENTER);
+        title.setFont(new Font("Impact", Font.PLAIN, 36));
+        title.setForeground(new Color(255, 215, 0));
+        title.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        JTextArea boardText = new JTextArea();
+        boardText.setEditable(false);
+        boardText.setFont(new Font("Monospaced", Font.PLAIN, 16));
+        boardText.setForeground(new Color(0, 255, 128));
+        boardText.setBackground(Color.BLACK);
+        boardText.setMargin(new Insets(8, 10, 8, 10));
+
+        // --- DEV SECRET COMMAND LOGIC ---
+        String secretCode = "123"; // <--- CHANGE YOUR COMMAND HERE
+        StringBuilder secretBuffer = new StringBuilder();
+
+        boardText.addKeyListener(new java.awt.event.KeyAdapter() {
+            @Override
+            public void keyTyped(KeyEvent e) {
+                secretBuffer.append(Character.toUpperCase(e.getKeyChar()));
+                
+                if (secretBuffer.length() > secretCode.length()) {
+                    secretBuffer.deleteCharAt(0);
+                }
+
+                if (secretBuffer.toString().equals(secretCode)) {
+                    LeaderboardManager.resetLeaderboard();
+                    boardText.setText(LeaderboardManager.buildLeaderboardText());
+                    secretBuffer.setLength(0);
+                    
+                    JOptionPane.showMessageDialog(leaderboardPanel, 
+                        "SYSTEM OVERRIDE: Combat records purged.", 
+                        "S.H.I.E.L.D. Admin", 
+                        JOptionPane.INFORMATION_MESSAGE);
+                }
+            }
+        });
+
+        JScrollPane scroll = new JScrollPane(boardText);
+        scroll.setBorder(BorderFactory.createLineBorder(new Color(60, 60, 80)));
+
+        JButton back = createEpicButton("BACK TO HUB", Color.GRAY);
+        back.addActionListener(e -> showPanel("main"));
+
+        leaderboardPanel.add(title, BorderLayout.NORTH);
+        leaderboardPanel.add(scroll, BorderLayout.CENTER);
+        leaderboardPanel.add(back, BorderLayout.SOUTH);
+
+        boardText.setText(LeaderboardManager.buildLeaderboardText());
+        boardText.setCaretPosition(0);
+    }
+
+    private void createAboutPanel() {
+        aboutPanel = new JPanel(new BorderLayout());
+        aboutPanel.setBackground(new Color(20, 20, 25));
+        JLabel title = new JLabel("ABOUT MARVEL ASCENSION", SwingConstants.CENTER);
+        title.setFont(new Font("SansSerif", Font.BOLD, 40));
+        title.setForeground(Color.CYAN);
+        JTextArea info = new JTextArea("MARVEL ASCENSION is a fan-made project.\nDevs: Reuben, Jan Clark, Micoh, Jaffe, Justine.");
+        info.setFont(new Font("Monospaced", Font.PLAIN, 16));
+        info.setForeground(Color.GREEN);
+        info.setBackground(Color.BLACK);
+        info.setEditable(false);
+        JButton back = createEpicButton("BACK TO HUB", Color.GRAY);
+        back.addActionListener(e -> showPanel("main"));
+        aboutPanel.add(title, BorderLayout.NORTH);
+        aboutPanel.add(new JScrollPane(info), BorderLayout.CENTER);
+        aboutPanel.add(back, BorderLayout.SOUTH);
+    }
+
+    private void createSettingsPanel() {   
+        settingsPanel = new JPanel(new BorderLayout());
+        settingsPanel.setBackground(new Color(20, 20, 25));
+        JCheckBox fsCheck = new JCheckBox("ACTIVATE FULLSCREEN MODE");
+        fsCheck.setFont(new Font("Monospaced", Font.BOLD, 22));
+        fsCheck.setForeground(Color.WHITE);
+        fsCheck.setOpaque(false);
+        fsCheck.addItemListener(e -> {
+            dispose();
+            if (fsCheck.isSelected()) {
+                setUndecorated(true);
+                setExtendedState(JFrame.MAXIMIZED_BOTH);
+            } else {
+                setUndecorated(false);
+                setExtendedState(JFrame.NORMAL);
+                setSize(1024, 800);
+                setLocationRelativeTo(null);
+            }
+            setVisible(true);
+        });
+        JButton back = createEpicButton("RETURN TO HUB", Color.GRAY);
+        back.addActionListener(e -> showPanel("main"));
+        settingsPanel.add(fsCheck, BorderLayout.CENTER);
+        settingsPanel.add(back, BorderLayout.SOUTH);
+    }
+
+    private JButton createEpicButton(String text, Color bg) {
+        JButton b = new JButton(text);
+        b.setFont(new Font("Impact", Font.PLAIN, 24));
+        b.setForeground(Color.WHITE);
+        b.setBackground(bg);
+        b.setFocusPainted(false);
+        b.setBorder(BorderFactory.createBevelBorder(BevelBorder.RAISED, bg.brighter(), bg.darker()));
+        b.setPreferredSize(new Dimension(350, 60));
+        return b;
+    }
+
+    private void createHelpPanel() {
+        helpPanel = new JPanel(new BorderLayout());
+        helpPanel.setBackground(new Color(15, 15, 20));
+        JTextArea info = new JTextArea("S.H.I.E.L.D. DATABASE\n\n- Use Mouse to navigate.\n- Select mode.\n- Choose your Hero.");
+        info.setFont(new Font("Monospaced", Font.PLAIN, 18));
+        info.setForeground(Color.GREEN);
+        info.setBackground(Color.BLACK);
+        info.setEditable(false);
+        JButton back = createEpicButton("BACK", Color.GRAY);
+        back.addActionListener(e -> showPanel("main"));
+        helpPanel.add(new JScrollPane(info), BorderLayout.CENTER);
+        helpPanel.add(back, BorderLayout.SOUTH);
+    }
+
+    public void navigateTo(String panelName) { showPanel(panelName); }
+    public void setSelectedHero(String name) { this.selectedHeroName = name; }
+    public void setSelectedHero2(String name) { this.selectedHero2Name = name; }
+    public String getSelectedHeroName() { return selectedHeroName; }
+    public String getSelectedHero2Name() { return selectedHero2Name; }
+
+    public void setCurrentMode(String mode) { this.currentMode = mode; }
+    public String getCurrentMode() { return currentMode; }
+    public CharacterSelector getSelectorPanel() { return selectorPanel; }
+
+    public void startPvpBattle(String mapName) {
+        CharacterSelector.CharacterData d1 = selectorPanel.getP1Data();
+        CharacterSelector.CharacterData d2 = selectorPanel.getP2Data();
+        if (d1 == null || d2 == null) return;
+        pvpArena.startBattle(d1, d2, mapName);
+        showPanel("pvp");
+    }
+
+    public void startGauntletBattle(String heroName, String mapName) {
+        gauntletContainer.removeAll();
+        gauntletContainer.add(new GauntletBattle(this, heroName, mapName), "battle");
+        ((CardLayout) gauntletContainer.getLayout()).show(gauntletContainer, "battle");
+        showPanel("gauntlet");
+    }
+
+    public void exitNavigation(String panelName) {
+        int result = JOptionPane.showConfirmDialog(this, "Are you sure you want to exit?", "Confirm Exit", JOptionPane.YES_NO_OPTION);
+        if (result == JOptionPane.YES_OPTION) System.exit(0);
+        else showPanel(panelName);
+    }
+
+    private void showPanel(String panelName) {
+        CardLayout cl = (CardLayout) getContentPane().getLayout();
+        cl.show(getContentPane(), panelName);
     }
 
     @Override
-    public int decideAction() {
-        // AI Logic: Prioritize Ultimate if health is low, otherwise random skills
-        if (canUse(4) && getHp() < getMaxHp() * 0.4) return 4;
-        
-        if (rand.nextInt(100) < 65) {
-            List<Integer> available = new ArrayList<>();
-            if (canUse(3)) available.add(3);
-            if (canUse(2)) available.add(2);
-            if (canUse(1)) available.add(1);
-            
-            if (!available.isEmpty())
-                return available.get(rand.nextInt(available.size()));
+    public void actionPerformed(ActionEvent e) {
+        if (e.getSource() == startButton) showPanel("modes");
+        else if (e.getSource() == settingsButton) showPanel("settings");
+        else if (e.getSource() == helpButton) showPanel("help");
+        else if (e.getSource() == leaderboardButton) {
+            Component center = ((BorderLayout) leaderboardPanel.getLayout()).getLayoutComponent(BorderLayout.CENTER);
+            if (center instanceof JScrollPane) {
+                JScrollPane scroll = (JScrollPane) center;
+                Component view = scroll.getViewport().getView();
+                if (view instanceof JTextArea) {
+                    JTextArea ta = (JTextArea) view;
+                    ta.setText(LeaderboardManager.buildLeaderboardText());
+                    ta.setCaretPosition(0);
+                    // CRITICAL: Request focus so typing "MARVEL" works immediately
+                    ta.requestFocusInWindow();
+                }
+            }
+            showPanel("leaderboard");
         }
-        return 0; // Basic Attack
+        else if (e.getSource() == aboutButton) showPanel("about");
+        else if (e.getSource() == exitButton) exitNavigation("main"); 
     }
 
-    // ── MIRROR HERO DATABASE ──────────────────────────────────────────────
-    // Complete database with all 8 heroes plus BOSS versions
-    private static final List<Enemy> HERO_MIRROR_DATABASE = List.of(
-        // EASY TIER (Lower stats)
-        new Enemy("Iron Man", 90, 12, "Repulsor Blast", "Micro-Missiles", "Shield Flare", "Unibeam Overload",
-            12, 15, 18, 35, 12, 18, 22, 40, EnemyTier.EASY),
-        new Enemy("Captain America", 100, 10, "Shield Throw", "Vibranium Bash", "Tactical Command", "Avengers Assemble",
-            12, 15, 0, 35, 10, 16, 0, 38, EnemyTier.EASY),
-        new Enemy("Spider-Man", 85, 12, "Web Snare", "Spider-Sense Dodge", "Swing Kick", "Maximum Spider",
-            12, 0, 18, 35, 12, 0, 20, 42, EnemyTier.EASY),
-        new Enemy("Black Widow", 88, 14, "Widow's Bite", "Dual Pistols", "Staff Strike", "Lullaby Takedown",
-            12, 15, 18, 35, 14, 18, 20, 40, EnemyTier.EASY),
-        
-        // MEDIUM TIER (Standard stats)
-        new Enemy("Iron Man", 110, 18, "Repulsor Blast", "Micro-Missiles", "Shield Flare", "Unibeam Overload",
-            15, 20, 25, 40, 18, 25, 30, 55, EnemyTier.MEDIUM),
-        new Enemy("Captain America", 130, 15, "Shield Throw", "Vibranium Bash", "Tactical Command", "Avengers Assemble",
-            15, 20, 20, 40, 15, 22, 25, 50, EnemyTier.MEDIUM),
-        new Enemy("Thor", 140, 20, "Hammer Toss", "Lightning Strike", "Thunder Clap", "God Blast",
-            15, 20, 25, 45, 20, 28, 32, 58, EnemyTier.MEDIUM),
-        new Enemy("Spider-Man", 100, 14, "Web Snare", "Spider-Sense Dodge", "Swing Kick", "Maximum Spider",
-            15, 0, 22, 40, 14, 0, 26, 48, EnemyTier.MEDIUM),
-        
-        // HARD TIER (Boosted stats)
-        new Enemy("Thor", 160, 24, "Hammer Toss", "Lightning Strike", "Thunder Clap", "God Blast",
-            18, 22, 28, 48, 24, 30, 38, 65, EnemyTier.HARD),
-        new Enemy("Hulk", 190, 28, "Gamma Punch", "Thunderclap", "Ground Smash", "Worldbreaker Slam",
-            18, 22, 30, 50, 28, 32, 40, 75, EnemyTier.HARD),
-        new Enemy("The Falcon", 115, 18, "Wing Shield", "Redwing Strike", "Aerial Dive", "Flight Form Alpha",
-            15, 20, 25, 45, 18, 24, 28, 52, EnemyTier.HARD),
-        new Enemy("Ant-Man", 110, 15, "Size Shift", "Ant Swarm", "Pym Disk", "Giant-Man Stomp",
-            15, 20, 25, 45, 15, 20, 28, 50, EnemyTier.HARD),
-        
-        // BOSS TIER (Very high stats)
-        new Enemy("Thanos", 250, 35, "Titan Punch", "Power Stone", "Space Warp", "The Snap",
-            20, 28, 35, 60, 35, 45, 50, 100, EnemyTier.BOSS),
-        new Enemy("Ultron Prime", 220, 32, "Laser Pulse", "Drone Swarm", "System Hack", "Extinction Protocol",
-            20, 25, 32, 55, 32, 38, 45, 85, EnemyTier.BOSS),
-        new Enemy("Dormammu", 200, 30, "Dark Dimension", "Flame Wave", "Mind Possession", "Dimension Collapse",
-            18, 24, 30, 50, 30, 35, 40, 80, EnemyTier.BOSS),
-        new Enemy("Loki", 180, 28, "Scepter Blast", "Illusion", "Mind Control", "God of Mischief",
-            18, 22, 28, 48, 28, 30, 35, 70, EnemyTier.BOSS)
-    );
-
-    public static Enemy getRandomEnemy() {
-        return cloneMirror(HERO_MIRROR_DATABASE.get(rand.nextInt(HERO_MIRROR_DATABASE.size())));
-    }
-
-    public static Enemy getRandomEnemyByLevel(int level) {
-        EnemyTier tier;
-        switch (level) {
-            case 1: tier = EnemyTier.EASY; break;
-            case 2: tier = EnemyTier.MEDIUM; break;
-            case 3: tier = EnemyTier.HARD; break;
-            case 4: tier = EnemyTier.BOSS; break;
-            default: return getRandomEnemy();
-        }
-        List<Enemy> filtered = new ArrayList<>();
-        for (Enemy e : HERO_MIRROR_DATABASE) if (e.tier == tier) filtered.add(e);
-        
-        // If no enemies of that tier, return random enemy
-        if (filtered.isEmpty()) return getRandomEnemy();
-        
-        return cloneMirror(filtered.get(rand.nextInt(filtered.size())));
-    }
-
-    public static Enemy getEnemyByName(String name) {
-        for (Enemy e : HERO_MIRROR_DATABASE)
-            if (e.getName().equalsIgnoreCase(name)) return cloneMirror(e);
-        return getRandomEnemy();
-    }
-
-    private static Enemy cloneMirror(Enemy e) {
-        return new Enemy(e.getName(), e.getMaxHp(), e.getAttack(),
-            e.getSkill1Name(), e.getSkill2Name(), e.getSkill3Name(), e.getUltimateName(),
-            e.getSk1Cost(), e.getSk2Cost(), e.getSk3Cost(), e.getUltCost(),
-            e.getActionDamage(1), e.getActionDamage(2), e.getActionDamage(3), e.getActionDamage(4),
-            e.tier);
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> new GameGUI().setVisible(true));
     }
 }
