@@ -17,21 +17,32 @@ public class Boot {
     public static final String PURPLE = "\u001B[35m";
 
    
-    public void launch() {
-        printEpicHeader();
-        
-        loadingSequence("\t\t\t" + PURPLE + "CONNECTING TO S.H.I.E.L.D. DATABASE" + RESET, 3);
-        loadingSequence("\t\t\t" + PURPLE + "BYPASSING HYDRA FIREWALLS" + RESET, 4);
-        loadingSequence("\t\t\t" + PURPLE + "AUTHENTICATING AVENGERS INITIATIVE" + RESET, 2);
-        
-        System.out.println(GREEN + "\n\t\t\t[SUCCESS] Access Granted. Welcome, Director." + RESET);
-        System.out.println("\t\t\t---------------------------------\n");
-        
-        initializeGUI();
-        customizeGUI();
-        showGUI();
-        startupComplete();
-    }
+public void launch() {
+    printEpicHeader();
+
+    loadingSequence("\t\t\t" + PURPLE + "CONNECTING TO S.H.I.E.L.D. DATABASE" + RESET, 3);
+    loadingSequence("\t\t\t" + PURPLE + "BYPASSING HYDRA FIREWALLS" + RESET, 4);
+    loadingSequence("\t\t\t" + PURPLE + "AUTHENTICATING AVENGERS INITIATIVE" + RESET, 2);
+
+    System.out.println(GREEN + "\n\t\t\t[SUCCESS] Access Granted. Welcome, Director." + RESET);
+    System.out.println("\t\t\t---------------------------------\n");
+
+      // Create AND show the GUI in a single invokeLater — no race condition
+      SwingUtilities.invokeLater(() -> {
+          try {
+              UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
+              UIManager.put("Button.font", new Font("Impact", Font.PLAIN, 24));
+          } catch (Exception e) {
+              System.out.println(RED + "\t\t\t[ERROR] LookAndFeel Failure: " + e.getMessage() + RESET);
+          }
+
+          gameGUI = new GameGUI();
+          gameGUI.setVisible(true);
+          System.out.println(GREEN + "\t\t\t[INFO] Window Deployed to Desktop." + RESET);
+      });
+
+      startupComplete();
+  }
 
     private void printEpicHeader() {
         System.out.println("\n\n\n\n\n\n");
