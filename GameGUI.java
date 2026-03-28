@@ -6,9 +6,9 @@ import java.io.File;
 
 public class GameGUI extends JFrame implements ActionListener, Interfaces.GameNavigator {
     
-    private JButton startButton, settingsButton, helpButton, exitButton, aboutButton;
+    private JButton startButton, settingsButton, helpButton, leaderboardButton, exitButton, aboutButton;
     private JLabel titleLabel;
-    private JPanel mainMenuPanel, settingsPanel, helpPanel, aboutPanel;
+    private JPanel mainMenuPanel, settingsPanel, helpPanel, aboutPanel, leaderboardPanel;
     
     private GameModes modesPanel; 
     private CharacterSelector selectorPanel; 
@@ -36,7 +36,6 @@ public class GameGUI extends JFrame implements ActionListener, Interfaces.GameNa
     }
 
     public GameGUI() {
-        // Font must be registered before UI components are created
         registerCustomFont("BitcountGridSingle_Cursive-SemiBold.ttf");
 
         setTitle("MARVEL ASCENSION");
@@ -52,11 +51,13 @@ public class GameGUI extends JFrame implements ActionListener, Interfaces.GameNa
         modesPanel = new GameModes(this);
         selectorPanel = new CharacterSelector(this);
         mapsPanel = new Maps(this);
+        createLeaderboardPanel();
         
         add(mainMenuPanel, "main");
         add(settingsPanel, "settings");
         add(aboutPanel, "about");
         add(helpPanel, "help");
+        add(leaderboardPanel, "leaderboard");
         add(modesPanel, "modes");       
         add(selectorPanel, "selector");
         add(mapsPanel, "maps");
@@ -86,7 +87,6 @@ public class GameGUI extends JFrame implements ActionListener, Interfaces.GameNa
         gbc.insets = new Insets(10, 10, 10, 10);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        // Cinematic Title with Custom Font and Dr. Strange aesthetic
         titleLabel = new JLabel(
             "<html><div style='text-align: center; color: #FFD700; " +
             "font-family: \"" + customFontName + "\", serif; " +
@@ -100,18 +100,75 @@ public class GameGUI extends JFrame implements ActionListener, Interfaces.GameNa
         gbc.gridy = 0;
         mainMenuPanel.add(titleLabel, gbc);
 
-        startButton    = createEpicButton("INITIATE MISSION", new Color(180, 0, 0));
-        settingsButton = createEpicButton("SYSTEM CONFIG",   new Color(50, 50, 70));
-        helpButton     = createEpicButton("DATABASE",        new Color(50, 50, 70));
-        aboutButton    = createEpicButton("ABOUT",           new Color(50, 50, 70));
-        exitButton     = createEpicButton("ABORT",           new Color(30, 30, 30));
+        startButton       = createEpicButton("INITIATE MISSION", new Color(180, 0, 0));
+        settingsButton    = createEpicButton("SYSTEM CONFIG",   new Color(50, 50, 70));
+        helpButton        = createEpicButton("DATABASE",        new Color(50, 50, 70));
+        leaderboardButton = createEpicButton("COMBAT RECORD",     new Color(50, 50, 70));
+        aboutButton       = createEpicButton("ABOUT",           new Color(50, 50, 70));
+        exitButton        = createEpicButton("ABORT",           new Color(30, 30, 30));
 
-        JButton[] btns = {startButton, settingsButton, helpButton, aboutButton, exitButton};
+        JButton[] btns = {startButton, settingsButton, helpButton, leaderboardButton, aboutButton, exitButton};
         for (int i = 0; i < btns.length; i++) {
             btns[i].addActionListener(this);
             gbc.gridy = i + 1;
             mainMenuPanel.add(btns[i], gbc);
         }
+    }
+
+    private void createLeaderboardPanel() {
+        leaderboardPanel = new JPanel(new BorderLayout());
+        leaderboardPanel.setBackground(new Color(15, 15, 20));
+
+        JLabel title = new JLabel("S.H.I.E.L.D. COMBAT LEADERBOARD", SwingConstants.CENTER);
+        title.setFont(new Font("Impact", Font.PLAIN, 36));
+        title.setForeground(new Color(255, 215, 0));
+        title.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        JTextArea boardText = new JTextArea();
+        boardText.setEditable(false);
+        boardText.setFont(new Font("Monospaced", Font.PLAIN, 16));
+        boardText.setForeground(new Color(0, 255, 128));
+        boardText.setBackground(Color.BLACK);
+        boardText.setMargin(new Insets(8, 10, 8, 10));
+
+        // --- DEV SECRET COMMAND LOGIC ---
+        String secretCode = "123"; // <--- CHANGE YOUR COMMAND HERE
+        StringBuilder secretBuffer = new StringBuilder();
+
+        boardText.addKeyListener(new java.awt.event.KeyAdapter() {
+            @Override
+            public void keyTyped(KeyEvent e) {
+                secretBuffer.append(Character.toUpperCase(e.getKeyChar()));
+                
+                if (secretBuffer.length() > secretCode.length()) {
+                    secretBuffer.deleteCharAt(0);
+                }
+
+                if (secretBuffer.toString().equals(secretCode)) {
+                    LeaderboardManager.resetLeaderboard();
+                    boardText.setText(LeaderboardManager.buildLeaderboardText());
+                    secretBuffer.setLength(0);
+                    
+                    JOptionPane.showMessageDialog(leaderboardPanel, 
+                        "SYSTEM OVERRIDE: Combat records purged.", 
+                        "S.H.I.E.L.D. Admin", 
+                        JOptionPane.INFORMATION_MESSAGE);
+                }
+            }
+        });
+
+        JScrollPane scroll = new JScrollPane(boardText);
+        scroll.setBorder(BorderFactory.createLineBorder(new Color(60, 60, 80)));
+
+        JButton back = createEpicButton("BACK TO HUB", Color.GRAY);
+        back.addActionListener(e -> showPanel("main"));
+
+        leaderboardPanel.add(title, BorderLayout.NORTH);
+        leaderboardPanel.add(scroll, BorderLayout.CENTER);
+        leaderboardPanel.add(back, BorderLayout.SOUTH);
+
+        boardText.setText(LeaderboardManager.buildLeaderboardText());
+        boardText.setCaretPosition(0);
     }
 
     private void createAboutPanel() {
@@ -224,6 +281,21 @@ public class GameGUI extends JFrame implements ActionListener, Interfaces.GameNa
         if (e.getSource() == startButton) showPanel("modes");
         else if (e.getSource() == settingsButton) showPanel("settings");
         else if (e.getSource() == helpButton) showPanel("help");
+        else if (e.getSource() == leaderboardButton) {
+            Component center = ((BorderLayout) leaderboardPanel.getLayout()).getLayoutComponent(BorderLayout.CENTER);
+            if (center instanceof JScrollPane) {
+                JScrollPane scroll = (JScrollPane) center;
+                Component view = scroll.getViewport().getView();
+                if (view instanceof JTextArea) {
+                    JTextArea ta = (JTextArea) view;
+                    ta.setText(LeaderboardManager.buildLeaderboardText());
+                    ta.setCaretPosition(0);
+                    // CRITICAL: Request focus so typing "MARVEL" works immediately
+                    ta.requestFocusInWindow();
+                }
+            }
+            showPanel("leaderboard");
+        }
         else if (e.getSource() == aboutButton) showPanel("about");
         else if (e.getSource() == exitButton) exitNavigation("main"); 
     }
