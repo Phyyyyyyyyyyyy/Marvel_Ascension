@@ -33,7 +33,6 @@ public class CharacterSelector extends JPanel implements Interfaces.GameScreen {
         setupLayout();
     }
 
-
     public void resetSelections() {
         p1Selection = null;
         p2Selection = null;
@@ -44,6 +43,19 @@ public class CharacterSelector extends JPanel implements Interfaces.GameScreen {
             b.setBorder(BorderFactory.createLineBorder(Color.DARK_GRAY));
         updateStatusBar();
     }
+
+    // ── Getter for hero data (SINGLE SOURCE OF TRUTH) ─────────────────────
+    public CharacterData getHeroData(String heroName) {
+        for (CharacterData data : heroDataMap.values()) {
+            if (data.name.equals(heroName)) {
+                return data;
+            }
+        }
+        return null;
+    }
+    
+    public CharacterData getP1Data() { return p1Selection; }
+    public CharacterData getP2Data() { return p2Selection; }
 
     // ── Show a toast overlay on the grid ──────────────────────────────────
     private void showToast(String message, Color bg) {
@@ -67,7 +79,7 @@ public class CharacterSelector extends JPanel implements Interfaces.GameScreen {
         JLabel header = new JLabel("SELECT YOUR AVENGERS", SwingConstants.CENTER);
         header.setFont(new Font("Verdana", Font.BOLD, 38));
         header.setForeground(new Color(255, 215, 0));
-        header.setBorder(BorderFactory.createEmptyBorder(16, 0, 4, 0));
+        header.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 0)); // Tighter top margin
         add(header, BorderLayout.NORTH);
 
         // ── Hero grid inside a JLayeredPane so the toast floats on top ─────
@@ -164,18 +176,26 @@ public class CharacterSelector extends JPanel implements Interfaces.GameScreen {
         updateStatusBar();
         south.add(statusBar, BorderLayout.NORTH);
 
-        JPanel footer = new JPanel(new FlowLayout(FlowLayout.CENTER, 18, 10));
+        // --- COMPACT FOOTER LAYOUT ---
+        // Tightened gaps and padding to stop overflow on smaller windows
+        JPanel footer = new JPanel(new BorderLayout(5, 5));
         footer.setOpaque(false);
+        footer.setBorder(BorderFactory.createEmptyBorder(5, 10, 15, 10)); 
 
-        JButton backBtn    = new JButton("BACK TO MENU");
+        JButton backBtn = new JButton("BACK TO MENU");
+        backBtn.setFont(new Font("Impact", Font.PLAIN, 18)); // Override massive global font
+
         JButton proceedBtn = new JButton("PROCEED TO MAP  ▶");
-        proceedBtn.setFont(new Font("Impact", Font.PLAIN, 20));
+        proceedBtn.setFont(new Font("Impact", Font.PLAIN, 18)); // Reduced slightly
         proceedBtn.setForeground(new Color(255, 215, 0));
         proceedBtn.setBackground(new Color(40, 80, 40));
         proceedBtn.setFocusPainted(false);
 
         JTextField secretInput = new JTextField(8);
-        JButton    unlockBtn   = new JButton("ACCESS SECRET FILES");
+        secretInput.setFont(new Font("Arial", Font.PLAIN, 16));
+
+        JButton unlockBtn = new JButton("ACCESS SECRET FILES");
+        unlockBtn.setFont(new Font("Impact", Font.PLAIN, 18)); // Override massive global font
 
         backBtn.addActionListener(e -> {
             resetSelections();
@@ -216,13 +236,22 @@ public class CharacterSelector extends JPanel implements Interfaces.GameScreen {
             }
         });
 
-        footer.add(backBtn);
+        JPanel leftFooter = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 0));
+        leftFooter.setOpaque(false);
+        leftFooter.add(backBtn);
         JLabel codeLabel = new JLabel("SECURE CODE:");
         codeLabel.setForeground(Color.WHITE);
-        footer.add(codeLabel);
-        footer.add(secretInput);
-        footer.add(unlockBtn);
-        footer.add(proceedBtn);
+        leftFooter.add(codeLabel);
+        leftFooter.add(secretInput);
+        leftFooter.add(unlockBtn);
+
+        JPanel rightFooter = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
+        rightFooter.setOpaque(false);
+        rightFooter.add(proceedBtn);
+
+        footer.add(leftFooter, BorderLayout.WEST);
+        footer.add(rightFooter, BorderLayout.EAST);
+
         south.add(footer, BorderLayout.SOUTH);
         add(south, BorderLayout.SOUTH);
     }
@@ -295,10 +324,10 @@ public class CharacterSelector extends JPanel implements Interfaces.GameScreen {
     /**
      * Converts a hero display name to the matching filename key.
      * Matches your actual filenames in the picture/ folder:
-     *   "Iron Man"        → "ironman"
-     *   "Captain America" → "captainamerica"
-     *   "Spider-Man"      → "spider-man"
-     *   "Ant-Man"         → "ant-man"
+     * "Iron Man"        → "ironman"
+     * "Captain America" → "captainamerica"
+     * "Spider-Man"      → "spider-man"
+     * "Ant-Man"         → "ant-man"
      */
     private String toImageKey(String heroName) {
         switch (heroName) {
@@ -473,9 +502,6 @@ public class CharacterSelector extends JPanel implements Interfaces.GameScreen {
         }
     }
 
-    /** Restore a button border to the correct state after deselection */
-   
-
     // ── Status bar ─────────────────────────────────────────────────────────
     private void updateStatusBar() {
         String mode    = mainFrame.getCurrentMode();
@@ -495,10 +521,6 @@ public class CharacterSelector extends JPanel implements Interfaces.GameScreen {
                 + p1Color + "'><b>" + p1Name + "</b></font></center></html>");
         }
     }
-
-    // Public getters for battle screens
-    public CharacterData getP1Data() { return p1Selection; }
-    public CharacterData getP2Data() { return p2Selection; }
 
     // ── Hero data ──────────────────────────────────────────────────────────
     private void initializeHeroData() {
