@@ -16,6 +16,8 @@ public abstract class Combatant {
     private int    sk1Cost, sk2Cost, sk3Cost, ultCost;
     private int    sk1Damage, sk2Damage, sk3Damage, ultDamage;
 
+    protected CooldownManager cooldown;
+
     public Combatant(String name, int hp, int attack,
                      String skill1Name, String skill2Name,
                      String skill3Name, String ultimateName,
@@ -54,7 +56,11 @@ public abstract class Combatant {
     public void resetForNewRound() {
         this.hp   = this.maxHp;
         this.mana = 30;
+        if (cooldown != null) cooldown.resetAll();
     }
+
+    public void setCooldownManager(CooldownManager c) { cooldown = c; }
+    public void tickCooldowns() { if (cooldown != null) cooldown.tickAll(); }
 
     public boolean isAlive() { return hp > 0; }
 
@@ -75,24 +81,28 @@ public abstract class Combatant {
                 restoreMana(10);
                 return attack;
             case 1:
-                if (mana >= sk1Cost) { mana -= sk1Cost; restoreMana(5); return sk1Damage; }
+                if (mana >= sk1Cost && (cooldown == null || cooldown.isReady(1)))
+                    { mana -= sk1Cost; restoreMana(5); if (cooldown != null) cooldown.useSkill(1); return sk1Damage; }
                 break;
             case 2:
-                if (mana >= sk2Cost) { mana -= sk2Cost; restoreMana(5); return sk2Damage; }
+                if (mana >= sk2Cost && (cooldown == null || cooldown.isReady(2)))
+                    { mana -= sk2Cost; restoreMana(5); if (cooldown != null) cooldown.useSkill(2); return sk2Damage; }
                 break;
             case 3:
-                if (mana >= sk3Cost) { mana -= sk3Cost; restoreMana(5); return sk3Damage; }
+                if (mana >= sk3Cost && (cooldown == null || cooldown.isReady(3)))
+                    { mana -= sk3Cost; restoreMana(5); if (cooldown != null) cooldown.useSkill(3); return sk3Damage; }
                 break;
             case 4:
-                if (mana >= ultCost) { mana -= ultCost; return ultDamage; }
+                if (mana >= ultCost && (cooldown == null || cooldown.isReady(4)))
+                    { mana -= ultCost; if (cooldown != null) cooldown.useSkill(4); return ultDamage; }
                 break;
         }
-        // Fallback — not enough mana → basic attack
         restoreMana(10);
         return attack;
     }
 
     public boolean canUse(int actionIndex) {
+        if (cooldown != null && !cooldown.isReady(actionIndex)) return false;
         switch (actionIndex) {
             case 1: return mana >= sk1Cost;
             case 2: return mana >= sk2Cost;
